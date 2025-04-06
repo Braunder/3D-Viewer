@@ -2,6 +2,8 @@
 
 A Python-based 3D model viewer application built with PyQt6 and OpenGL. This viewer supports loading and displaying various 3D model formats with texture support.
 
+![3D Model](https://i.imgur.com/jguCVyw.png)
+
 ## Features
 
 - Support for multiple 3D model formats (OBJ, FBX, GLTF, GLB, STL, PLY)
