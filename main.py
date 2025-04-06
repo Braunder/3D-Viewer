@@ -239,17 +239,35 @@ class ModelLoader(QThread):
                         if isinstance(mesh, trimesh.Trimesh):
                             meshes.append(mesh)
                             # Store material information
-                            if hasattr(mesh, 'visual') and hasattr(mesh.visual, 'material'):
-                                print(f"Mesh has material: {mesh.visual.material}")
-                                if isinstance(mesh.visual.material, trimesh.visual.material.PBRMaterial):
-                                    print("Found PBR material")
+                            try:
+                                if (hasattr(mesh, 'visual') and 
+                                    hasattr(mesh.visual, 'material') and 
+                                    isinstance(mesh.visual.material, trimesh.visual.material.PBRMaterial)):
+                                    print(f"Processing PBR material for mesh: {name}")
                                     material = mesh.visual.material
-                                    if hasattr(material, 'baseColorTexture') and material.baseColorTexture is not None:
-                                        print(f"Material has texture")
-                                        # Store the texture image directly
+                                    
+                                    # Check for base color texture
+                                    if (hasattr(material, 'baseColorTexture') and 
+                                        material.baseColorTexture is not None):
+                                        print(f"Found base color texture for mesh: {name}")
                                         texture_key = f"{name}_baseColor"
-                                        materials[texture_key] = material.baseColorTexture
+                                        
+                                        # Get UV coordinates safely
+                                        uv_coords = None
+                                        if (hasattr(mesh.visual, 'uv') and 
+                                            mesh.visual.uv is not None and 
+                                            len(mesh.visual.uv) > 0):
+                                            uv_coords = mesh.visual.uv
+                                        
+                                        materials[texture_key] = {
+                                            'texture': material.baseColorTexture,
+                                            'uv': uv_coords
+                                        }
                                         print(f"Stored texture with key: {texture_key}")
+                                    else:
+                                        print(f"No base color texture found for mesh: {name}")
+                            except Exception as mat_error:
+                                print(f"Error processing material for mesh {name}: {str(mat_error)}")
                     
                     if not meshes:
                         raise Exception("No valid meshes found in the scene")
@@ -642,7 +660,7 @@ class ModelViewer(QOpenGLWidget):
                                     texture_key = f"{mesh_name}_baseColor"
                                     materials[texture_key] = {
                                         'texture': material.baseColorTexture,
-                                        'uv': mesh.visual.uv if hasattr(mesh.visual, 'uv') else None
+                                        'uv': mesh.visual.uv if hasattr(mesh.visual, 'uv') and mesh.visual.uv is not None else None
                                     }
                                     print(f"Stored texture with key: {texture_key}")
                         meshes.append(mesh)
@@ -673,8 +691,18 @@ class ModelViewer(QOpenGLWidget):
                             normals.extend(mesh.vertex_normals.tolist())
                         
                         # Add UV coordinates if available
-                        if hasattr(mesh, 'visual') and hasattr(mesh.visual, 'uv'):
-                            uvs.extend(mesh.visual.uv.tolist())
+                        try:
+                            if (hasattr(mesh, 'visual') and 
+                                hasattr(mesh.visual, 'uv') and 
+                                mesh.visual.uv is not None and 
+                                len(mesh.visual.uv) > 0):
+                                uvs.extend(mesh.visual.uv.tolist())
+                                print(f"Added UV coordinates for mesh: {mesh_name}")
+                            else:
+                                print(f"No UV coordinates found for mesh: {mesh_name}")
+                        except Exception as uv_error:
+                            print(f"Error processing UV coordinates for mesh {mesh_name}: {str(uv_error)}")
+                            uvs = []  # Reset UVs if there's an error
                         
                         vertex_offset += len(mesh.vertices)
                     
