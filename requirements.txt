@@ -1,0 +1,13 @@
+PyQt6==6.4.2
+PyQt6-Qt6==6.4.2
+PyQt6-sip==13.4.1
+PyOpenGL==3.1.6
+PyOpenGL-accelerate==3.1.6
+trimesh==3.22.1
+numpy==1.23.5
+scipy==1.9.3
+networkx==2.8.8
+rtree==1.0.1
+shapely==2.0.1
+pillow==9.3.0
+pyglet==2.0.7
